@@ -12,10 +12,23 @@ class SubscriptionsController < ApplicationController
       plan: "gold"
     )
     @user.update stripe_id: @customer.id, active_until: subscription_end_date
+    redirect_to user_path(@user), notice: 'Subscription was successfully created.'
 
   rescue Stripe::CardError => e
     flash[:error] = e.message
-    redirect_to new_subscription_path
+    redirect_to user_path @user
+  end
+
+  def update
+    customer = Stripe::Customer.retrieve @user.stripe_id
+    customer.source = params[:stripeToken]
+    customer.save
+
+    redirect_to user_path(@user), notice: 'Payment details were successfully updated.'
+
+  rescue Stripe::CardError => e
+    flash[:error] = e.message
+    redirect_to user_path @user
   end
 
   def destroy
